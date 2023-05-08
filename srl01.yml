@@ -1,0 +1,15 @@
+name: srl01_ndk
+
+topology:
+  kinds:
+    srl:
+      type: ixrd3
+      image: ghcr.io/nokia/srlinux
+  nodes:
+    srl_leaf1:
+      kind: srl
+      binds:
+          - /root/SRLinux/ndk_pedro_morais/srtelemetry.sh:/usr/local/bin/srtelemetry.sh:rw
+          - /root/SRLinux/ndk_pedro_morais/srtelemetry.yang:/opt/srtelemetry/yang/srtelemetry.yang:rw
+          - /root/SRLinux/ndk_pedro_morais/srtelemetry.yml:/etc/opt/srlinux/appmgr/srtelemetry.yml:rw
+          - /root/SRLinux/ndk_pedro_morais/srtelemetry.py:/etc/opt/srlinux/appmgr/user_agents/srtelemetry.py:rw

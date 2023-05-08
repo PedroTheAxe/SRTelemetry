@@ -1,0 +1,85 @@
+module srtelemetry {
+    yang-version "1.1";
+
+    // namespace
+    namespace "urn:srl_test/srtelemetry";
+
+    prefix "srtelemetry";
+
+    revision "2022-03-14" {
+        description "Initial revision";
+        reference "TBD";
+    }
+
+    grouping srtelemetry-top {
+        description "Top level grouping for srtelemetry sample app";
+
+        container srtelemetry{
+        
+            //presence "presence container";
+            description "Top level enclosing container for srtelemetry sample app 
+                        config and operational state data";
+            
+            container monitoring_elements{
+                list element{
+                    key resource;
+                    leaf resource {
+                        type string;
+                        mandatory true;
+                        description "Path of the resource to monitoring";
+                    }
+                    leaf parameter {
+                        type string;
+                        mandatory true;
+                        description "Element status to keep track";
+                    }
+                    leaf monitoring_condition {
+                        type string;
+                        description "Element status to keep track";
+                    }
+                    leaf-list resource_filter {
+                        type string;
+                        description "Filter";
+                    }
+                    leaf trigger_condition {
+                        type string;
+                        mandatory true;
+                        description "Condition that will trigger the trap";
+                    }
+                    leaf trigger_message {
+                        type string;
+                        description "MIB Event";
+                    }
+                    leaf resolution_condition {
+                        type string;
+                        description "Resolution Trigger Condition";
+                    }
+                    leaf resolution_message {
+                        type string;
+                        description "Resolution message";
+                    }
+            }
+            container targets{
+                list target{
+                    key address;
+                    leaf address {
+                        type string;
+                        mandatory true;
+                        description "Address of target";  
+                    }
+                    leaf network-instance {
+                        type string;
+                        description "Network-instance to use";  
+                    }
+
+                    leaf community-string {
+                        type string;
+                        description "Community-string to use";  
+                    }
+                }     
+            }
+        }      
+    }
+    // data definition statements
+    uses srtelemetry-top;
+}

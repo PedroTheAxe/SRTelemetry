@@ -1,0 +1,13 @@
+# See example_config.yml for an explanation of all the accepted fields
+srtelemetry:
+   path: /etc/opt/srlinux/appmgr/user_agents/
+   launch-command: /usr/local/bin/srtelemetry.sh
+   search-command: /bin/bash /usr/local/bin/srtelemetry.sh
+   wait-for-config: No
+   failure-threshold: 100
+   failure-action: wait=1
+   yang-modules:
+       names: 
+           - "srtelemetry"
+       source-directories:
+           - "/opt/srtelemetry/yang/"

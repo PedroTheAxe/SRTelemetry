@@ -1,0 +1,50 @@
+{
+  "name": "srl01_ndk",
+  "type": "clab",
+  "clab": {
+    "config": {
+      "prefix": "clab",
+      "mgmt": {
+        "network": "clab",
+        "bridge": "br-0cc74ce49e39",
+        "ipv4-subnet": "172.20.20.0/24",
+        "ipv4-gw": "172.20.20.1",
+        "ipv6-subnet": "2001:172:20:20::/64",
+        "ipv6-gw": "2001:172:20:20::1",
+        "mtu": "1500",
+        "external-access": true
+      }
+    }
+  },
+  "nodes": {
+    "srl_leaf1": {
+      "index": "0",
+      "shortname": "srl_leaf1",
+      "longname": "clab-srl01_ndk-srl_leaf1",
+      "fqdn": "srl_leaf1.srl01_ndk.io",
+      "group": "",
+      "labdir": "/root/SRLinux/ndk_pedro_morais/clab-srl01_ndk/srl_leaf1",
+      "kind": "srl",
+      "image": "ghcr.io/nokia/srlinux",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.2",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "2001:172:20:20::2",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-0cc74ce49e39",
+        "clab-node-group": "",
+        "clab-node-kind": "srl",
+        "clab-node-lab-dir": "/root/SRLinux/ndk_pedro_morais/clab-srl01_ndk/srl_leaf1",
+        "clab-node-name": "srl_leaf1",
+        "clab-node-type": "ixrd3",
+        "clab-topo-file": "/root/SRLinux/ndk_pedro_morais/srl01.yml",
+        "containerlab": "srl01_ndk"
+      }
+    }
+  },
+  "links": [
+  ]
+}
