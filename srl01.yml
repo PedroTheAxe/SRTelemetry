@@ -9,7 +9,7 @@ topology:
     srl_leaf1:
       kind: srl
       binds:
-          - /root/SRLinux/ndk_pedro_morais/srtelemetry.sh:/usr/local/bin/srtelemetry.sh:rw
-          - /root/SRLinux/ndk_pedro_morais/srtelemetry.yang:/opt/srtelemetry/yang/srtelemetry.yang:rw
-          - /root/SRLinux/ndk_pedro_morais/srtelemetry.yml:/etc/opt/srlinux/appmgr/srtelemetry.yml:rw
-          - /root/SRLinux/ndk_pedro_morais/srtelemetry.py:/etc/opt/srlinux/appmgr/user_agents/srtelemetry.py:rw
+          - /home/pedro/Desktop/SRTelemetry/srtelemetry.sh:/usr/local/bin/srtelemetry.sh:rw
+          - /home/pedro/Desktop/SRTelemetry/srtelemetry.yang:/opt/srtelemetry/yang/srtelemetry.yang:rw
+          - /home/pedro/Desktop/SRTelemetry/srtelemetry.yml:/etc/opt/srlinux/appmgr/srtelemetry.yml:rw
+          - /home/pedro/Desktop/SRTelemetry/srtelemetry.py:/etc/opt/srlinux/appmgr/user_agents/srtelemetry.py:rw

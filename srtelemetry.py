@@ -17,14 +17,6 @@ import threading
 import queue
 import re
 from logging.handlers import RotatingFileHandler
-
-
-#import sdk_service_pb2
-#import sdk_service_pb2_grpc
-#import config_service_pb2
-#import telemetry_service_pb2
-#import telemetry_service_pb2_grpc
-#import sdk_common_pb2
 from ndk import appid_service_pb2
 from ndk.sdk_service_pb2_grpc import SdkMgrServiceStub
 from ndk.sdk_service_pb2_grpc import SdkNotificationServiceStub
@@ -39,142 +31,24 @@ from ndk import networkinstance_service_pb2
 from ndk import lldp_service_pb2
 from ndk import route_service_pb2
 from ndk import config_service_pb2
-
-
 from ndk.config_service_pb2 import ConfigSubscriptionRequest
+from pygnmi.client import gNMIclient,telemetryParser
 
-
-
-
+#import sdk_service_pb2
+#import sdk_service_pb2_grpc
+#import config_service_pb2
+#import telemetry_service_pb2
+#import telemetry_service_pb2_grpc
+#import sdk_common_pb2
 #from logger import *
 #from element import *
 #from target import *
 
-# Modules
-from pygnmi.client import gNMIclient,telemetryParser
-############################################################
-#                       Variables
-############################################################
 
-############################################################
-## Agent will start with this name
-############################################################
 agent_name ='srtelemetry'
-
-############################################################
-## FILENAME of input
-############################################################
-#FILENAME = 'input_elements'
-# This file is only used in Guilherme's implementation
-
-############################################################
-## Open a GRPC channel to connect to sdk_mgr on the dut
-## sdk_mgr will be listening on 50053
-############################################################
 channel = grpc.insecure_channel('localhost:50053')
 metadata = [('agent_name', agent_name)]
 stub = SdkMgrServiceStub(channel)
-
-############################################################
-## This is the Global Variables to the srtelemetry to work 
-############################################################
-# GNMI Server
-##host = ('unix:///opt/srlinux/var/run/sr_gnmi_server', 57400)
-
-# Main Variables of the agent
-global_paths = []
-targets = []
-elements = []
-
-""" def handle_notification(notification: Notification) -> None:
-    # Field names are available on the Notification documentation page
-    if notification.HasField("config"):
-        #handle_ConfigNotification(notification.config)
-        print(notification.config)
-    if notification.HasField("intf"):
-        #handle_InterfaceNotification(notification.intf)
-        print(notification.intf)
-    if notification.HasField("nw_inst"):
-        #handle_NetworkInstanceNotification(notification.nw_inst)
-        print(notification.nw_inst)
-    if notification.HasField("lldp_neighbor"):
-        #handle_LldpNeighborNotification(notification.lldp_neighbor)
-        print(notification.lldp_neighbor)
-    if notification.HasField("bfd_session"):
-        #handle_BfdSessionNotification(notification.bfd_session)
-        print(notification.bfd_session)
-    if notification.HasField("route"):
-        #handle_IpRouteNotification(notification.route)
-        print(notification.route)
-    if notification.HasField("appid"):
-        #handle_AppIdentNotification(notification.appid)
-        print(notification.appid)
-    if notification.HasField("nhg"):
-        #handle_NextHopGroupNotification(notification.nhg)
-        print(notification.nhg)
-
-sdk_mgr_client = SdkMgrServiceStub(channel)
-
-register_request = AgentRegistrationRequest()
-register_request.agent_liveliness = 5 # Optional
-response = sdk_mgr_client.AgentRegister(request=register_request, metadata=metadata)
-print(response)
-if response.status == SdkMgrStatus.kSdkMgrSuccess:
-    # Agent has been registered successfully
-    print("Success")
-    pass
-else:
-    print("Registration ERROR")
-    # Agent registration failed error string available as response.error_str
-    pass
-
-
-request = NotificationRegisterRequest(op=NotificationRegisterRequest.Create)
-response = sdk_mgr_client.NotificationRegister(request=request, metadata=metadata)
-if response.status == SdkMgrStatus.kSdkMgrSuccess:
-    # Notification Register successful
-    stream_id = response.stream_id
-    #print("stream id:"+str(stream_id))
-    pass
-else:
-    # Notification Register failed, error string available as response.error_str
-    pass
-
-
-
-request = NotificationRegisterRequest(
-    stream_id=stream_id,
-    op=NotificationRegisterRequest.AddSubscription,
-    config=ConfigSubscriptionRequest(),
-)
-
-response = sdk_mgr_client.NotificationRegister(request=request, metadata=metadata)
-if response.status == SdkMgrStatus.kSdkMgrSuccess:
-    # Successful registration
-    print(response.status)
-    pass
-else:
-    # Registration failed, error string available as response.error_str
-    pass
-
-sdk_notification_client = SdkNotificationServiceStub(channel)
-stream_request = NotificationStreamRequest(stream_id=stream_id)
-stream_response = sdk_notification_client.NotificationStream(
-    request=stream_request, metadata=metadata
-)
-
-try:
-    for response in stream_response:
-        for notification in response.notification:
-            # Handle notifications
-            print(notification)
-            handle_notification(notification)
-            pass
-
-except grpc._channel._Rendezvous as err:
-            print('GOING TO EXIT NOW: {}'.format(err))
-            sys.exit()
- """
 
 def Subscribe(stream_id, option):
     op = NotificationRegisterRequest.AddSubscription
@@ -195,7 +69,7 @@ def Subscribe(stream_id, option):
         request = NotificationRegisterRequest(op=op, stream_id=stream_id, config=entry)
 
     subscription_response = stub.NotificationRegister(request=request, metadata=metadata)
-    print('Status of subscription response for {}:: {}'.format(option, subscription_response.status))
+    logging.info('Status of subscription response for {}:: {}'.format(option, subscription_response.status))
 
 def Subscribe_Notifications(stream_id):
     '''
@@ -228,19 +102,47 @@ def get_app_id(app_name):
     return app_id_response.id
 
 
-def Handle_Notification(obj, app_id)-> bool:
-    print("App_id"+str(app_id))
+def Handle_Notification(notification: Notification)-> None:
+    logging.info("Handling notifications NOW")
+    # Field names are available on the Notification documentation page
+    if notification.HasField("config"):
+        logging.info("CONFIG")
+        #handle_ConfigNotification(notification.config)
+    if notification.HasField("intf"):
+        logging.info("INTF")
+        #handle_InterfaceNotification(notification.intf)
+    if notification.HasField("nw_inst"):
+        logging.info("NWINST")
+        #handle_NetworkInstanceNotification(notification.nw_inst)
+    if notification.HasField("lldp_neighbor"):
+        logging.info("LLDP")
+        #handle_LldpNeighborNotification(notification.lldp_neighbor)
+    if notification.HasField("bfd_session"):
+        logging.info("BFD")
+        #handle_BfdSessionNotification(notification.bfd_session)
+    if notification.HasField("route"):
+        logging.info("ROUTE")
+        #handle_IpRouteNotification(notification.route)
+    if notification.HasField("appid"):
+        logging.info("APPID")
+        #handle_AppIdentNotification(notification.appid)
+    if notification.HasField("nhg"):
+        logging.info("NHG")
+        #handle_NextHopGroupNotification(notification.nhg)
     return False
 
 
+def Run():    
 
-def Run():
+    logging.info("Entering RUN")
+
     sub_stub = SdkNotificationServiceStub(channel)
 
     response = stub.AgentRegister(request=AgentRegistrationRequest(), metadata=metadata)
     logging.info(f"Registration response : {response.status}")
-    
-    app_id = get_app_id(agent_name)
+
+        
+            
     app_id = get_app_id(agent_name)
     if not app_id:
         logging.error(f'idb does not have the appId for {agent_name} : {app_id}')
@@ -263,10 +165,13 @@ def Run():
             logging.info(f"Count :: {count}  NOTIFICATION:: \n{r.notification}")
             count += 1
             for obj in r.notification:
+                logging.info("ITERATING THROUGH NOTIFICATION")
                 if obj.HasField('config') and obj.config.key.js_path == ".commit.end":
                     logging.info('TO DO -commit.end config')
+                    #Create new handler to subscribe to telemetry notifications if config adds any topology element
+                    #Possibly use pygnmi to subscribe telemetry paths
                 else:
-                    Handle_Notification(obj, app_id)
+                    Handle_Notification(obj)
     except grpc._channel._Rendezvous as err:
         logging.info('GOING TO EXIT NOW: {}'.format(str(err)))
         print("Rendezvous Exception")
@@ -298,7 +203,7 @@ def Exit_Gracefully(signum, frame):
 
 if __name__ == '__main__':
     hostname = socket.gethostname()
-    stdout_dir = '/var/log/srlinux/stdout' # PyTEnv.SRL_STDOUT_DIR
+    stdout_dir = '/var/log/srlinux/stdout' # PyTEnv.SR  L_STDOUT_DIR
     signal.signal(signal.SIGTERM, Exit_Gracefully)
     if not os.path.exists(stdout_dir):
         os.makedirs(stdout_dir, exist_ok=True)
