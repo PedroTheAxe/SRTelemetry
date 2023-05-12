@@ -1,80 +1,60 @@
-module srtelemetry {
+module srtelemetry{
     yang-version "1.1";
 
     // namespace
-    namespace "urn:srl_test/srtelemetry";
+    namespace "urn:srl_sdk_apps/srtelemetry";
+    prefix "srl_sdk_apps-srtelemetry";
 
-    prefix "srtelemetry";
+    import srl_nokia-common {
+        prefix srl-comm;
+    }
+    import srl_nokia-system {
+        prefix srl-system;
+    }
+    import srl_nokia-network-instance {
+        prefix srl-netinst;
+    }
+    import srl_nokia-tls {
+        prefix srl-tls;
+    }
+    import srl_nokia-extensions {
+        prefix srl-ext;
+    }
 
-    revision "2022-03-14" {
-        description "Initial revision";
-        reference "TBD";
+    // description
+    description
+        "SRTelemetry YANG module";
+
+    // revision(s)
+    revision "2023-05-12" {
+        description
+          "SRTelemetry YANG module 1.0";
     }
 
     grouping srtelemetry-top {
-        description "Top level grouping for srtelemetry sample app";
-
-        container srtelemetry{
-        
-            //presence "presence container";
-            description "Top level enclosing container for srtelemetry sample app 
-                        config and operational state data";
-            
-            container monitoring_elements{
-                list element{
-                    key resource;
-                    leaf resource {
-                        type string;
-                        mandatory true;
-                        description "Path of the resource to monitoring";
-                    }
-                    leaf parameter {
-                        type string;
-                        mandatory true;
-                        description "Element status to keep track";
-                    }
-                    leaf monitoring_condition {
-                        type string;
-                        description "Element status to keep track";
-                    }
-                    leaf-list resource_filter {
-                        type string;
-                        description "Filter";
-                    }
-                    leaf trigger_message {
-                        type string;
-                        description "MIB Event";
-                    }
-                    leaf resolution_condition {
-                        type string;
-                        description "Resolution Trigger Condition";
-                    }
-                    leaf resolution_message {
-                        type string;
-                        description "Resolution message";
-                    }
+        container srtelemetry {
+            leaf address {
+                type srl-comm:ip-address;
+                default "::";
+                srl-ext:show-importance high;
+                description "IP Address the prometheus exporter server listens on";
             }
-            container targets{
-                list target{
-                    key address;
-                    leaf address {
-                        type string;
-                        mandatory true;
-                        description "Address of target";  
-                    }
-                    leaf network-instance {
-                        type string;
-                        description "Network-instance to use";  
-                    }
-
-                    leaf community-string {
-                        type string;
-                        description "Community-string to use";  
-                    }
-                }     
+            leaf port {
+                type srl-comm:port-number;
+                default "8888";
+                srl-ext:show-importance high;
+                description "Port number the prometheus exporter server listens on";
             }
-        }      
-    }
-    // data definition statements
-    uses srtelemetry-top;
+            leaf network-instance {
+                type leafref {
+                    path "/srl-netinst:network-instance/srl-netinst:name";
+                }
+                srl-ext:show-importance high;
+                default "mgmt";
+                description
+                    "Reference to a configured network-instance used to send out telemetry updates
+                    This network-instance must already exist in the system.";
+
+        } // container srtelemetry
+    } // grouping srtelemetry-top
 }
