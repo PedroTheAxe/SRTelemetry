@@ -134,8 +134,6 @@ def Handle_Notification(notification: Notification)-> None:
 
 def Run():    
 
-    logging.info("Entering RUN")
-
     sub_stub = SdkNotificationServiceStub(channel)
 
     response = stub.AgentRegister(request=AgentRegistrationRequest(), metadata=metadata)
@@ -158,38 +156,39 @@ def Run():
 
     stream_request = NotificationStreamRequest(stream_id=stream_id)
     stream_response = sub_stub.NotificationStream(stream_request, metadata=metadata)
-    count = 1
+    count = 0
     route_count = 0
-    try:
-        for r in stream_response:
-            logging.info(f"Count :: {count}  NOTIFICATION:: \n{r.notification}")
-            count += 1
-            for obj in r.notification:
-                logging.info("ITERATING THROUGH NOTIFICATION")
-                if obj.HasField('config') and obj.config.key.js_path == ".commit.end":
-                    logging.info('TO DO -commit.end config')
-                    #Create new handler to subscribe to telemetry notifications if config adds any topology element
-                    #Possibly use pygnmi to subscribe telemetry paths
-                else:
-                    Handle_Notification(obj)
-    except grpc._channel._Rendezvous as err:
-        logging.info('GOING TO EXIT NOW: {}'.format(str(err)))
-        print("Rendezvous Exception")
-    except Exception as e:
-        logging.error('Exception caught :: {}'.format(str(e)))
-        print("Generic Run Exception: "+e)
-
+    while True:
         try:
-            response = stub.AgentUnRegister(request=AgentRegistrationRequest(), metadata=metadata)
-            logging.error('Run try: Unregister response:: {}'.format(response))
+            for r in stream_response:
+                count += 1
+                logging.info(f"Count :: {count}  NOTIFICATION:: \n{r.notification}")
+                for obj in r.notification:
+                    logging.info("ITERATING THROUGH NOTIFICATION")
+                    #if obj.HasField('config') and obj.config.key.js_path == ".commit.end":
+                        #logging.info('TO DO -commit.end config')
+                        #Create new handler to subscribe to telemetry notifications if config adds any topology element
+                        #Possibly use pygnmi to subscribe telemetry paths
+                    #else:
+                    Handle_Notification(obj)
         except grpc._channel._Rendezvous as err:
             logging.info('GOING TO EXIT NOW: {}'.format(str(err)))
-            print("Unregister Run Exception")
-            sys.exit()
+            #print("Rendezvous Exception")
+        except Exception as e:
+            logging.error('Exception caught :: {}'.format(str(e)))
+            print("Generic Run Exception: "+e)
 
-        return True
-    sys.exit()
-    return True
+            try:
+                response = stub.AgentUnRegister(request=AgentRegistrationRequest(), metadata=metadata)
+                logging.error('Run try: Unregister response:: {}'.format(response))
+            except grpc._channel._Rendezvous as err:
+                logging.info('GOING TO EXIT NOW: {}'.format(str(err)))
+                print("Unregister Run Exception")
+                sys.exit()
+
+        #    return True
+        #sys.exit()
+        #return True
 
 def Exit_Gracefully(signum, frame):
     logging.info("Caught signal :: {}\n will unregister fib_agent".format(signum))

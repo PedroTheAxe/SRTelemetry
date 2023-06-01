@@ -1,5 +1,6 @@
 # See example_config.yml for an explanation of all the accepted fields
 srtelemetry:
+   #run-as-user: root
    path: /etc/opt/srlinux/appmgr/user_agents/
    launch-command: /usr/local/bin/srtelemetry.sh
    search-command: /bin/bash /usr/local/bin/srtelemetry.sh
@@ -11,3 +12,7 @@ srtelemetry:
            - "srtelemetry"
        source-directories:
            - "/opt/srtelemetry/yang/"
+           - "/opt/srlinux/models/srl_nokia/models"
+           #- "/opt/srlinux/models/srl_nokia/models/common"
+           #- "/opt/srlinux/models/srl_nokia/models/network-instance"
+           #- "/opt/srlinux/models/srl_nokia/models/system"

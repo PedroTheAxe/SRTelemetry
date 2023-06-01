@@ -1,38 +1,42 @@
-module srtelemetry{
-    yang-version "1.1";
+module srtelemetry {
+
+    yang-version "1";
 
     // namespace
-    namespace "urn:srl_sdk_apps/srtelemetry";
-    prefix "srl_sdk_apps-srtelemetry";
+    namespace "urn:srl_nokia_ext/srtelemetry";
+    prefix "srtelemetry";
 
     import srl_nokia-common {
         prefix srl-comm;
     }
+
     import srl_nokia-system {
         prefix srl-system;
     }
+    
     import srl_nokia-network-instance {
         prefix srl-netinst;
     }
-    import srl_nokia-tls {
-        prefix srl-tls;
-    }
+
     import srl_nokia-extensions {
         prefix srl-ext;
     }
 
     // description
-    description
-        "SRTelemetry YANG module";
+    description  "SRTelemetry YANG module";
 
     // revision(s)
     revision "2023-05-12" {
-        description
-          "SRTelemetry YANG module 1.0";
+        description "SRTelemetry YANG module 1.0";
     }
 
     grouping srtelemetry-top {
+        description "Top level grouping for srtelemetry sample app";
+
         container srtelemetry {
+            presence "presence container";
+            description "Top level enclosing container for srtelemetry sample app config and operational state data";
+
             leaf address {
                 type srl-comm:ip-address;
                 default "::";
@@ -51,10 +55,15 @@ module srtelemetry{
                 }
                 srl-ext:show-importance high;
                 default "mgmt";
-                description
-                    "Reference to a configured network-instance used to send out telemetry updates
-                    This network-instance must already exist in the system.";
+                description "Reference to a configured network-instance used to send out telemetry updates This network-instance must already exist in the system.";
 
-        } // container srtelemetry
-    } // grouping srtelemetry-top
+            } // container srtelemetry
+        } // grouping srtelemetry-top
+
+    }
+
+    augment "/srl-system:system" {
+        uses srtelemetry-top;
+    }
+
 }
