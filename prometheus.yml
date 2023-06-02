@@ -1,0 +1,15 @@
+# Copyright 2020 Nokia
+# Licensed under the BSD 3-Clause License.
+# SPDX-License-Identifier: BSD-3-Clause
+
+global:
+  scrape_interval: 20s
+
+# metrics_path defaults to '/metrics'
+# scheme defaults to 'http'.
+scrape_configs:
+  # Python example
+  - job_name: "srtelemetry"
+    static_configs:
+      - targets:
+          - "localhost:9090"

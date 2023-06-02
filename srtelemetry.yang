@@ -49,10 +49,11 @@ module srtelemetry {
                 srl-ext:show-importance high;
                 description "Port number the prometheus exporter server listens on";
             }
-            leaf network-instance {
+            leaf network-instance { 
                 type leafref {
-                    path "/srl-netinst:network-instance/srl-netinst:name";
-                }
+                    path "/srl_nokia-netinst:network-instance/srl_nokia-netinst:name";
+                }
+                // must "(../type = 'srl-netinst:ip-vrf' or ../type = 'srl-netinst:mac-vrf' or ../type = 'srl-netinst:default')"
                 srl-ext:show-importance high;
                 default "mgmt";
                 description "Reference to a configured network-instance used to send out telemetry updates This network-instance must already exist in the system.";
