@@ -26,7 +26,6 @@ function main()
     ip netns exec srbase-mgmt pip3 install srlinux-ndk
     ip netns exec srbase-mgmt pip3 install pygnmi
     ip netns exec srbase-mgmt pip3 install 'protobuf>3.20'
-    ip netns exec srbase-mgmt pip3 install prometheus-client
 
     #export PYTHONPATH="$PYTHONPATH:/etc/opt/srlinux/appmgr/user_agents:/opt/srlinux/bin:/usr/lib/python3.6/site-packages/sdk_protos:/etc/opt/srlinux/appmgr/venv-dev/lib/python3.6/site-packages"
     export PYTHONPATH="$PYTHONPATH:/etc/opt/srlinux/appmgr/user_agents:/opt/srlinux/bin:/etc/opt/srlinux/appmgr/venv-dev/lib/python3.6/site-packages"

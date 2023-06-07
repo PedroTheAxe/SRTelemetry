@@ -2,7 +2,6 @@
 # coding=utf-8
 
 from unittest import result
-#from prometheus_client import start_http_server, Counter, Summary
 import grpc
 import datetime
 import time
@@ -34,8 +33,6 @@ from ndk import route_service_pb2
 from ndk import config_service_pb2
 from ndk.config_service_pb2 import ConfigSubscriptionRequest
 from pygnmi.client import gNMIclient,telemetryParser
-import random
-import time
 
 #import sdk_service_pb2
 #import sdk_service_pb2_grpc
@@ -106,6 +103,7 @@ def get_app_id(app_name):
 
 
 def Handle_Notification(notification: Notification)-> None:
+    logging.info("Handling notifications NOW")
     # Field names are available on the Notification documentation page
     if notification.HasField("config"):
         logging.info("CONFIG")
@@ -166,7 +164,7 @@ def Run():
                 count += 1
                 logging.info(f"Count :: {count}  NOTIFICATION:: \n{r.notification}")
                 for obj in r.notification:
-                    #logging.info("ITERATING THROUGH NOTIFICATION")
+                    logging.info("ITERATING THROUGH NOTIFICATION")
                     #if obj.HasField('config') and obj.config.key.js_path == ".commit.end":
                         #logging.info('TO DO -commit.end config')
                         #Create new handler to subscribe to telemetry notifications if config adds any topology element
@@ -174,9 +172,12 @@ def Run():
                     #else:
                     Handle_Notification(obj)
         except grpc._channel._Rendezvous as err:
-            logging.info('Rendezvous exception caught: {}'.format(str(err)))
+            logging.info('GOING TO EXIT NOW: {}'.format(str(err)))
+            #print("Rendezvous Exception")
         except Exception as e:
-            logging.error('Generic xception caught :: {}'.format(str(e)))
+            logging.error('Exception caught :: {}'.format(str(e)))
+            print("Generic Run Exception: "+e)
+
             try:
                 response = stub.AgentUnRegister(request=AgentRegistrationRequest(), metadata=metadata)
                 logging.error('Run try: Unregister response:: {}'.format(response))
@@ -199,24 +200,10 @@ def Exit_Gracefully(signum, frame):
         logging.info('GOING TO EXIT NOW: {}'.format(err))
         sys.exit()
 
-# Create a metric to track time spent and requests made.
-#REQUEST_TIME = Summary('request_processing_seconds', 'Time spent processing request')
-
-# Decorate function with metric.
-#@REQUEST_TIME.time()
-#def process_request(t):
-#    """A dummy function that takes some time."""
-#    time.sleep(t)
-
 if __name__ == '__main__':
     hostname = socket.gethostname()
     stdout_dir = '/var/log/srlinux/stdout' # PyTEnv.SR  L_STDOUT_DIR
     signal.signal(signal.SIGTERM, Exit_Gracefully)
-    # Start up the server to expose the metrics.
-    #start_http_server(9090)
-    # Generate some requests.
-    #while True:
-    #process_request(random.random())
     if not os.path.exists(stdout_dir):
         os.makedirs(stdout_dir, exist_ok=True)
     log_filename = '{}/{}_srtelemetry.log'.format(stdout_dir, hostname)
