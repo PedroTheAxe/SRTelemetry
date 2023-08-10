@@ -9,17 +9,18 @@ topology:
     srl_leaf1:
       kind: srl
       binds:
-          - /home/pedro/Desktop/SRTelemetry/srtelemetry.sh:/usr/local/bin/srtelemetry.sh:rw
-          - /home/pedro/Desktop/SRTelemetry/srtelemetry.yang:/opt/srtelemetry/yang/srtelemetry.yang:rw
-          - /home/pedro/Desktop/SRTelemetry/srtelemetry.yml:/etc/opt/srlinux/appmgr/srtelemetry.yml:rw
-          - /home/pedro/Desktop/SRTelemetry/srtelemetry.py:/etc/opt/srlinux/appmgr/user_agents/srtelemetry.py:rw
+          - /home/vboxuser/Desktop/Nokia/SRTelemetry/srtelemetry.sh:/usr/local/bin/srtelemetry.sh:rw
+          - /home/vboxuser/Desktop/Nokia/SRTelemetry/srtelemetry.yang:/opt/srtelemetry/yang/srtelemetry.yang:rw
+          - /home/vboxuser/Desktop/Nokia/SRTelemetry/srtelemetry.yml:/etc/opt/srlinux/appmgr/srtelemetry.yml:rw
+          - /home/vboxuser/Desktop/Nokia/SRTelemetry/srtelemetry.py:/etc/opt/srlinux/appmgr/user_agents/srtelemetry.py:rw
     prometheus:
         kind: linux
         #mgmt-ipv4: 172.20.20.42
         image: prom/prometheus:v2.37.8
         binds:
-          - /home/pedro/Desktop/SRTelemetry/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+          - /home/vboxuser/Desktop/Nokia/SRTelemetry/prometheus.yml:/etc/prometheus/prometheus.yml:ro
         cmd: --config.file=/etc/prometheus/prometheus.yml
         ports:
           - 9090:9090
+          - 8000:8000
         group: "10"

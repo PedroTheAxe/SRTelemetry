@@ -8,7 +8,9 @@ import time
 import sys
 import logging
 import socket
+import random
 import os
+import ctypes
 import ipaddress
 import json
 import signal
@@ -32,7 +34,8 @@ from ndk import lldp_service_pb2
 from ndk import route_service_pb2
 from ndk import config_service_pb2
 from ndk.config_service_pb2 import ConfigSubscriptionRequest
-from pygnmi.client import gNMIclient,telemetryParser
+from prometheus_client import start_http_server, Summary
+#from pygnmi.client import gNMIclient,telemetryParser
 
 #import sdk_service_pb2
 #import sdk_service_pb2_grpc
@@ -131,8 +134,39 @@ def Handle_Notification(notification: Notification)-> None:
         #handle_NextHopGroupNotification(notification.nhg)
     return False
 
+# Create a metric to track time spent and requests made.
+REQUEST_TIME = Summary('request_processing_seconds', 'Time spent processing request')
+
+# Decorate function with metric.
+@REQUEST_TIME.time()
+def process_request(t):
+    """A dummy function that takes some time."""
+    time.sleep(t)
 
 def Run():    
+
+    # Path to your network namespace
+    ns_path = '/var/run/netns/srbase-mgmt'
+
+    # Open the file corresponding to the network namespace
+    ns_fd = os.open(ns_path, os.O_RDONLY)
+
+    # Load the setns function
+    libc = ctypes.CDLL('libc.so.6')
+    setns = libc.setns
+    setns.argtypes = [ctypes.c_int, ctypes.c_int]
+
+    # CLONE_NEWNET constant for network namespace
+    CLONE_NEWNET = 0x40000000
+
+    # Set the network namespace
+    if setns(ns_fd, CLONE_NEWNET) == -1:
+        raise Exception("Failed to set network namespace")
+
+    # Start the HTTP server
+    start_http_server(8000)
+
+    process_request(random.random())
 
     sub_stub = SdkNotificationServiceStub(channel)
 
