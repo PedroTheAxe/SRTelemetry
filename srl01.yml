@@ -13,6 +13,8 @@ topology:
           - /home/vboxuser/Desktop/Nokia/SRTelemetry/srtelemetry.yang:/opt/srtelemetry/yang/srtelemetry.yang:rw
           - /home/vboxuser/Desktop/Nokia/SRTelemetry/srtelemetry.yml:/etc/opt/srlinux/appmgr/srtelemetry.yml:rw
           - /home/vboxuser/Desktop/Nokia/SRTelemetry/srtelemetry.py:/etc/opt/srlinux/appmgr/user_agents/srtelemetry.py:rw
+      ports:
+        - 8000:8000
     prometheus:
         kind: linux
         #mgmt-ipv4: 172.20.20.42
@@ -22,5 +24,4 @@ topology:
         cmd: --config.file=/etc/prometheus/prometheus.yml
         ports:
           - 9090:9090
-          - 8000:8000
         group: "10"

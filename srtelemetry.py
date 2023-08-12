@@ -165,7 +165,6 @@ def Run():
 
     # Start the HTTP server
     start_http_server(8000)
-
     process_request(random.random())
 
     sub_stub = SdkNotificationServiceStub(channel)

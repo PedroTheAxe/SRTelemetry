@@ -11,5 +11,7 @@ scrape_configs:
   # Python example
   - job_name: "srtelemetry"
     static_configs:
-      - targets:
-          - "172.20.20.2:8000"
+      - targets: ['172.20.20.2:8000']
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ['localhost:9090']
