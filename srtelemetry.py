@@ -34,7 +34,7 @@ from ndk import lldp_service_pb2
 from ndk import route_service_pb2
 from ndk import config_service_pb2
 from ndk.config_service_pb2 import ConfigSubscriptionRequest
-from prometheus_client import start_http_server, Summary
+from prometheus_client import start_http_server, Summary, Enum
 #from pygnmi.client import gNMIclient,telemetryParser
 
 #import sdk_service_pb2
@@ -104,6 +104,47 @@ def get_app_id(app_name):
     logging.info(f'app_id_response {app_id_response.status} {app_id_response.id} ')
     return app_id_response.id
 
+def sanitize_for_prometheus(s):
+    # Replace invalid characters with underscores
+    sanitized = re.sub(r'[^a-zA-Z0-9_:]', '_', s)
+    
+    # Remove leading and trailing underscores
+    sanitized = sanitized.strip('_')
+    
+    # Ensure the sanitized string is not empty
+    if not sanitized:
+        sanitized = 'invalid'
+    
+    return sanitized
+
+declared_enums = {}
+
+def handle_InterfaceNotification(notification: Notification) -> None:
+    logging.info("Entered here")
+    logging.info(notification.data.admin_is_up)
+    enum_name = 'admin_state_' + sanitize_for_prometheus(notification.key.if_name)
+    
+    # Check if the enum metric has already been declared
+    if enum_name in declared_enums:
+        logging.info("Enum metric already declared, changing state")
+        # Change the state of the existing enum metric
+        if notification.data.admin_is_up == 1:
+            declared_enums[enum_name].state('up')
+        else:
+            declared_enums[enum_name].state('down')
+    else:
+        # Declare the enum metric if it hasn't been declared before
+        admin_state = Enum(enum_name, 'interface admin_state', states=['up', 'down'])
+        logging.info("Declared new enum metric")
+        if notification.data.admin_is_up == 1:
+            logging.info("Setting state up")
+            admin_state.state('up')
+        else:
+            logging.info("Setting state down")
+            admin_state.state('down')
+        
+        # Store the declared enum metric in the dictionary
+        declared_enums[enum_name] = admin_state
 
 def Handle_Notification(notification: Notification)-> None:
     logging.info("Handling notifications NOW")
@@ -113,7 +154,7 @@ def Handle_Notification(notification: Notification)-> None:
         #handle_ConfigNotification(notification.config)
     if notification.HasField("intf"):
         logging.info("INTF")
-        #handle_InterfaceNotification(notification.intf)
+        handle_InterfaceNotification(notification.intf)
     if notification.HasField("nw_inst"):
         logging.info("NWINST")
         #handle_NetworkInstanceNotification(notification.nw_inst)
