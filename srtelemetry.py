@@ -146,6 +146,33 @@ def handle_InterfaceNotification(notification: Notification) -> None:
         # Store the declared enum metric in the dictionary
         declared_enums[enum_name] = admin_state
 
+def handle_NetworkInstanceNotification(notification: Notification) -> None:
+
+    enum_name = 'nw_inst_state' + sanitize_for_prometheus(notification.key.inst_name)
+
+    if enum_name in declared_enums:
+        logging.info("Enum metric already declared, changing state")
+        logging.info(notification.data.oper_is_up + "THIS IS WHAT IS HAPPENING1")
+        # Change the state of the existing enum metric
+        if notification.data.oper_is_up == "true":
+            declared_enums[enum_name].state('up')
+        else:
+            declared_enums[enum_name].state('down')
+    else:
+        # Declare the enum metric if it hasn't been declared before
+        admin_state = Enum(enum_name, 'nw_instance oper_state', states=['up', 'down'])
+        logging.info("Declared new enum metric")
+        logging.info(notification.data.oper_is_up + "THIS IS WHAT IS HAPPENING2")
+        if notification.data.oper_is_up == "true":
+            logging.info("Setting state up")
+            admin_state.state('up')
+        else:
+            logging.info("Setting state down")
+            admin_state.state('down')
+        
+        # Store the declared enum metric in the dictionary
+        declared_enums[enum_name] = admin_state
+
 def Handle_Notification(notification: Notification)-> None:
     logging.info("Handling notifications NOW")
     # Field names are available on the Notification documentation page
@@ -157,22 +184,14 @@ def Handle_Notification(notification: Notification)-> None:
         handle_InterfaceNotification(notification.intf)
     if notification.HasField("nw_inst"):
         logging.info("NWINST")
-        #handle_NetworkInstanceNotification(notification.nw_inst)
+        handle_NetworkInstanceNotification(notification.nw_inst)
     if notification.HasField("lldp_neighbor"):
         logging.info("LLDP")
         #handle_LldpNeighborNotification(notification.lldp_neighbor)
-    if notification.HasField("bfd_session"):
-        logging.info("BFD")
-        #handle_BfdSessionNotification(notification.bfd_session)
     if notification.HasField("route"):
         logging.info("ROUTE")
         #handle_IpRouteNotification(notification.route)
-    if notification.HasField("appid"):
-        logging.info("APPID")
-        #handle_AppIdentNotification(notification.appid)
-    if notification.HasField("nhg"):
-        logging.info("NHG")
-        #handle_NextHopGroupNotification(notification.nhg)
+
     return False
 
 # Create a metric to track time spent and requests made.
