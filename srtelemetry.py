@@ -129,18 +129,20 @@ def handle_InterfaceNotification(notification: Notification) -> None:
         logging.info("Enum metric already declared, changing state")
         # Change the state of the existing enum metric
         if notification.data.admin_is_up == 1:
+            logging.info("Setting state up here")
             declared_enums[enum_name].state('up')
         else:
+            logging.info("Setting state downAAAA here")
             declared_enums[enum_name].state('down')
     else:
         # Declare the enum metric if it hasn't been declared before
         admin_state = Enum(enum_name, 'interface admin_state', states=['up', 'down'])
-        logging.info("Declared new enum metric")
+        logging.info("Declared new enum metric in the else ELSE ELSE ELSE")
         if notification.data.admin_is_up == 1:
-            logging.info("Setting state up")
+            logging.info("Setting state up here")
             admin_state.state('up')
         else:
-            logging.info("Setting state down")
+            logging.info("Setting state down there")
             admin_state.state('down')
         
         # Store the declared enum metric in the dictionary
@@ -148,26 +150,28 @@ def handle_InterfaceNotification(notification: Notification) -> None:
 
 def handle_NetworkInstanceNotification(notification: Notification) -> None:
 
-    enum_name = 'nw_inst_state' + sanitize_for_prometheus(notification.key.inst_name)
+    enum_name = 'nwinst_state_' + sanitize_for_prometheus(notification.key.inst_name)
 
     if enum_name in declared_enums:
         logging.info("Enum metric already declared, changing state")
         logging.info(notification.data.oper_is_up + "THIS IS WHAT IS HAPPENING1")
         # Change the state of the existing enum metric
-        if notification.data.oper_is_up == "true":
+        if str(notification.data.oper_is_up) == "True":
+            logging.info("aqui fixe")
             declared_enums[enum_name].state('up')
         else:
+            logging.info("aqui fixe23")
             declared_enums[enum_name].state('down')
     else:
         # Declare the enum metric if it hasn't been declared before
         admin_state = Enum(enum_name, 'nw_instance oper_state', states=['up', 'down'])
         logging.info("Declared new enum metric")
-        logging.info(notification.data.oper_is_up + "THIS IS WHAT IS HAPPENING2")
-        if notification.data.oper_is_up == "true":
-            logging.info("Setting state up")
+        logging.info(str(notification.data.oper_is_up) + "THIS IS WHAT IS HAPPENING2AAAAAAAAAAAAAAAAA")
+        if str(notification.data.oper_is_up) == "True":
+            logging.info("Setting state up HERE NETWORK INSTANCE")
             admin_state.state('up')
         else:
-            logging.info("Setting state down")
+            logging.info("Setting state down HERE NETWORK INSTANCE")
             admin_state.state('down')
         
         # Store the declared enum metric in the dictionary

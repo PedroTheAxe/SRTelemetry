@@ -29,15 +29,11 @@ function main()
     sr_cli --candidate-mode acl cpm-filter ipv4-filter entry 1 match protocol tcp
     sr_cli --candidate-mode --commit-at-end acl cpm-filter ipv4-filter entry 1 action accept 
 
-    #export PYTHONPATH="$PYTHONPATH:/etc/opt/srlinux/appmgr/user_agents:/opt/srlinux/bin:/usr/lib/python3.6/site-packages/sdk_protos:/etc/opt/srlinux/appmgr/venv-dev/lib/python3.6/site-packages"
     export PYTHONPATH="$PYTHONPATH:/etc/opt/srlinux/appmgr/user_agents:/opt/srlinux/bin:/etc/opt/srlinux/appmgr/venv-dev/lib/python3.6/site-packages"
     export http_proxy=""
     export https_proxy=""
     python3 ${main_module}
    
-
-
-
     child=$! 
     wait "$child"
 

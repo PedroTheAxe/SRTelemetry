@@ -1,14 +1,11 @@
-name: srl01_ndk
+name: srl02
 
 topology:
-  kinds:
-    srl:
-      type: ixrd3
-      image: ghcr.io/nokia/srlinux
   nodes:
-    srl_leaf1:
+    srl1:
       kind: srl
       mgmt-ipv4: 172.20.20.2
+      image: ghcr.io/nokia/srlinux
       binds:
           - /home/vboxuser/Desktop/Nokia/SRTelemetry/srtelemetry.sh:/usr/local/bin/srtelemetry.sh:rw
           - /home/vboxuser/Desktop/Nokia/SRTelemetry/srtelemetry.yang:/opt/srtelemetry/yang/srtelemetry.yang:rw
@@ -16,6 +13,9 @@ topology:
           - /home/vboxuser/Desktop/Nokia/SRTelemetry/srtelemetry.py:/etc/opt/srlinux/appmgr/user_agents/srtelemetry.py:rw
       ports:
         - 8000:8000
+    srl2:
+      kind: srl
+      image: ghcr.io/nokia/srlinux
     prometheus:
         kind: linux
         #mgmt-ipv4: 172.20.20.42
@@ -44,3 +44,6 @@ topology:
         GF_AUTH_ANONYMOUS_ENABLED: "true"
         GF_AUTH_ANONYMOUS: "true"
       group: "10"
+
+  links:
+    - endpoints: ["srl1:e1-1", "srl2:e1-1"]
