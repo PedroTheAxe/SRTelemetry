@@ -16,6 +16,11 @@ topology:
     srl2:
       kind: srl
       image: ghcr.io/nokia/srlinux
+      binds:
+          - /home/vboxuser/Desktop/Nokia/SRTelemetry/srtelemetry.sh:/usr/local/bin/srtelemetry.sh:rw
+          - /home/vboxuser/Desktop/Nokia/SRTelemetry/srtelemetry.yang:/opt/srtelemetry/yang/srtelemetry.yang:rw
+          - /home/vboxuser/Desktop/Nokia/SRTelemetry/srtelemetry.yml:/etc/opt/srlinux/appmgr/srtelemetry.yml:rw
+          - /home/vboxuser/Desktop/Nokia/SRTelemetry/srtelemetry.py:/etc/opt/srlinux/appmgr/user_agents/srtelemetry.py:rw
     prometheus:
         kind: linux
         #mgmt-ipv4: 172.20.20.42

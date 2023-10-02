@@ -34,7 +34,7 @@ from ndk import lldp_service_pb2
 from ndk import route_service_pb2
 from ndk import config_service_pb2
 from ndk.config_service_pb2 import ConfigSubscriptionRequest
-from prometheus_client import start_http_server, Summary, Enum
+from prometheus_client import start_http_server, Summary, Enum, Info, Gauge
 #from pygnmi.client import gNMIclient,telemetryParser
 
 #import sdk_service_pb2
@@ -54,7 +54,9 @@ metadata = [('agent_name', agent_name)]
 stub = SdkMgrServiceStub(channel)
 
 def Subscribe(stream_id, option):
+
     op = NotificationRegisterRequest.AddSubscription
+    
     if option == 'intf':
         entry = interface_service_pb2.InterfaceSubscriptionRequest()
         request = NotificationRegisterRequest(op=op, stream_id=stream_id, intf=entry)
@@ -118,68 +120,68 @@ def sanitize_for_prometheus(s):
     return sanitized
 
 declared_enums = {}
+declared_info = []
+current_neighbors = {}
+lldp_neighbors_gauge = Gauge(
+    'lldp_neighbors',
+    'Tracks LLDP neighbors',
+    ['interface_name', 'system_name']
+)
 
 def handle_InterfaceNotification(notification: Notification) -> None:
-    logging.info("Entered here")
-    logging.info(notification.data.admin_is_up)
-    enum_name = 'admin_state_' + sanitize_for_prometheus(notification.key.if_name)
+    enum_name = 'admin_state_' + sanitize_for_prometheus(notification.key.if_name) + "_" + socket.gethostname()
     
     # Check if the enum metric has already been declared
     if enum_name in declared_enums:
-        logging.info("Enum metric already declared, changing state")
         # Change the state of the existing enum metric
         if notification.data.admin_is_up == 1:
-            logging.info("Setting state up here")
             declared_enums[enum_name].state('up')
         else:
-            logging.info("Setting state downAAAA here")
             declared_enums[enum_name].state('down')
     else:
         # Declare the enum metric if it hasn't been declared before
         admin_state = Enum(enum_name, 'interface admin_state', states=['up', 'down'])
-        logging.info("Declared new enum metric in the else ELSE ELSE ELSE")
         if notification.data.admin_is_up == 1:
-            logging.info("Setting state up here")
             admin_state.state('up')
         else:
-            logging.info("Setting state down there")
             admin_state.state('down')
         
         # Store the declared enum metric in the dictionary
         declared_enums[enum_name] = admin_state
 
+def handle_LldpNeighborNotification(notification: Notification) -> None:
+
+    interface_name = str(notification.key.interface_name)
+    system_name = str(notification.data.system_name)
+    
+    # Set gauge to 1 for this (interface_name, system_name) combination.
+    # The '1' is a dummy value; the real information is in the labels.
+    lldp_neighbors_gauge.labels(interface_name=interface_name, system_name=system_name).set(1)
+
+    
+
 def handle_NetworkInstanceNotification(notification: Notification) -> None:
 
-    enum_name = 'nwinst_state_' + sanitize_for_prometheus(notification.key.inst_name)
+    enum_name = 'nwinst_state_' + sanitize_for_prometheus(notification.key.inst_name) + "_" + socket.gethostname()
 
     if enum_name in declared_enums:
-        logging.info("Enum metric already declared, changing state")
-        logging.info(notification.data.oper_is_up + "THIS IS WHAT IS HAPPENING1")
         # Change the state of the existing enum metric
         if str(notification.data.oper_is_up) == "True":
-            logging.info("aqui fixe")
             declared_enums[enum_name].state('up')
         else:
-            logging.info("aqui fixe23")
             declared_enums[enum_name].state('down')
     else:
         # Declare the enum metric if it hasn't been declared before
         admin_state = Enum(enum_name, 'nw_instance oper_state', states=['up', 'down'])
-        logging.info("Declared new enum metric")
-        logging.info(str(notification.data.oper_is_up) + "THIS IS WHAT IS HAPPENING2AAAAAAAAAAAAAAAAA")
         if str(notification.data.oper_is_up) == "True":
-            logging.info("Setting state up HERE NETWORK INSTANCE")
             admin_state.state('up')
         else:
-            logging.info("Setting state down HERE NETWORK INSTANCE")
             admin_state.state('down')
         
         # Store the declared enum metric in the dictionary
         declared_enums[enum_name] = admin_state
 
 def Handle_Notification(notification: Notification)-> None:
-    logging.info("Handling notifications NOW")
-    # Field names are available on the Notification documentation page
     if notification.HasField("config"):
         logging.info("CONFIG")
         #handle_ConfigNotification(notification.config)
@@ -191,7 +193,7 @@ def Handle_Notification(notification: Notification)-> None:
         handle_NetworkInstanceNotification(notification.nw_inst)
     if notification.HasField("lldp_neighbor"):
         logging.info("LLDP")
-        #handle_LldpNeighborNotification(notification.lldp_neighbor)
+        handle_LldpNeighborNotification(notification.lldp_neighbor)
     if notification.HasField("route"):
         logging.info("ROUTE")
         #handle_IpRouteNotification(notification.route)
@@ -234,6 +236,8 @@ def Run():
     sub_stub = SdkNotificationServiceStub(channel)
 
     response = stub.AgentRegister(request=AgentRegistrationRequest(), metadata=metadata)
+
+
     logging.info(f"Registration response : {response.status}")
 
         
@@ -244,9 +248,11 @@ def Run():
     else:
         logging.info(f'Got appId {app_id} for {agent_name}')
 
-    request=NotificationRegisterRequest(op=NotificationRegisterRequest.Create)
+    request = NotificationRegisterRequest(op=NotificationRegisterRequest.Create)
     create_subscription_response = stub.NotificationRegister(request=request, metadata=metadata)
     stream_id = create_subscription_response.stream_id
+
+
     logging.info(f"Create subscription response received. stream_id : {stream_id}")
 
     Subscribe_Notifications(stream_id)
