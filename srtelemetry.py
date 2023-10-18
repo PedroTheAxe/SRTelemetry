@@ -35,18 +35,6 @@ from ndk import route_service_pb2
 from ndk import config_service_pb2
 from ndk.config_service_pb2 import ConfigSubscriptionRequest
 from prometheus_client import start_http_server, Summary, Enum, Info, Gauge
-#from pygnmi.client import gNMIclient,telemetryParser
-
-#import sdk_service_pb2
-#import sdk_service_pb2_grpc
-#import config_service_pb2
-#import telemetry_service_pb2
-#import telemetry_service_pb2_grpc
-#import sdk_common_pb2
-#from logger import *
-#from element import *
-#from target import *
-
 
 agent_name ='srtelemetry'
 channel = grpc.insecure_channel('localhost:50053')
@@ -77,43 +65,30 @@ def Subscribe(stream_id, option):
     logging.info('Status of subscription response for {}:: {}'.format(option, subscription_response.status))
 
 def Subscribe_Notifications(stream_id):
-    '''
-    Agent will receive notifications to what is subscribed here.
-    '''
+
     if not stream_id:
         logging.info("Stream ID not sent.")
         return False
 
-    ##Subscribe to Interface Notifications
     Subscribe(stream_id, 'intf')
-    
-    ##Subscribe to Network-Instance Notifications
     Subscribe(stream_id, 'nw_inst')
-
-    ##Subscribe to LLDP Neighbor Notifications
     Subscribe(stream_id, 'lldp')
-
-    ##Subscribe to IP Route Notifications
     Subscribe(stream_id, 'route')
-
-    ##Subscribe to Config Notifications - configs added by the fib-agent
     Subscribe(stream_id, 'cfg')
 
 def get_app_id(app_name):
+
     logging.info(f'Metadata {metadata} ')
     appId_req = AppIdRequest(name=app_name)
     app_id_response=stub.GetAppId(request=appId_req, metadata=metadata)
     logging.info(f'app_id_response {app_id_response.status} {app_id_response.id} ')
+    
     return app_id_response.id
 
 def sanitize_for_prometheus(s):
-    # Replace invalid characters with underscores
+    
     sanitized = re.sub(r'[^a-zA-Z0-9_:]', '_', s)
-    
-    # Remove leading and trailing underscores
     sanitized = sanitized.strip('_')
-    
-    # Ensure the sanitized string is not empty
     if not sanitized:
         sanitized = 'invalid'
     
@@ -129,24 +104,20 @@ lldp_neighbors_gauge = Gauge(
 )
 
 def handle_InterfaceNotification(notification: Notification) -> None:
-    enum_name = 'admin_state_' + sanitize_for_prometheus(notification.key.if_name) + "_" + socket.gethostname()
     
-    # Check if the enum metric has already been declared
+    enum_name = 'admin_state_' + sanitize_for_prometheus(notification.key.if_name) + "_" + socket.gethostname()
     if enum_name in declared_enums:
-        # Change the state of the existing enum metric
         if notification.data.admin_is_up == 1:
             declared_enums[enum_name].state('up')
         else:
             declared_enums[enum_name].state('down')
     else:
-        # Declare the enum metric if it hasn't been declared before
         admin_state = Enum(enum_name, 'interface admin_state', states=['up', 'down'])
         if notification.data.admin_is_up == 1:
             admin_state.state('up')
         else:
             admin_state.state('down')
         
-        # Store the declared enum metric in the dictionary
         declared_enums[enum_name] = admin_state
 
 def handle_LldpNeighborNotification(notification: Notification) -> None:
@@ -154,9 +125,10 @@ def handle_LldpNeighborNotification(notification: Notification) -> None:
     interface_name = str(notification.key.interface_name)
     system_name = str(notification.data.system_name)
     
-    # Set gauge to 1 for this (interface_name, system_name) combination.
-    # The '1' is a dummy value; the real information is in the labels.
-    lldp_neighbors_gauge.labels(interface_name=interface_name, system_name=system_name).set(1)
+    if notification.op != "Delete":
+        lldp_neighbors_gauge.labels(interface_name=interface_name, system_name=system_name).set(1)
+    else:
+        lldp_neighbors_gauge.labels(interface_name=interface_name, system_name=system_name).set(0)
 
     
 
@@ -165,82 +137,54 @@ def handle_NetworkInstanceNotification(notification: Notification) -> None:
     enum_name = 'nwinst_state_' + sanitize_for_prometheus(notification.key.inst_name) + "_" + socket.gethostname()
 
     if enum_name in declared_enums:
-        # Change the state of the existing enum metric
         if str(notification.data.oper_is_up) == "True":
             declared_enums[enum_name].state('up')
         else:
             declared_enums[enum_name].state('down')
     else:
-        # Declare the enum metric if it hasn't been declared before
         admin_state = Enum(enum_name, 'nw_instance oper_state', states=['up', 'down'])
         if str(notification.data.oper_is_up) == "True":
             admin_state.state('up')
         else:
             admin_state.state('down')
         
-        # Store the declared enum metric in the dictionary
         declared_enums[enum_name] = admin_state
 
 def Handle_Notification(notification: Notification)-> None:
     if notification.HasField("config"):
-        logging.info("CONFIG")
         #handle_ConfigNotification(notification.config)
+        logging.info("Implement config notification handling if needed")
     if notification.HasField("intf"):
-        logging.info("INTF")
         handle_InterfaceNotification(notification.intf)
     if notification.HasField("nw_inst"):
-        logging.info("NWINST")
         handle_NetworkInstanceNotification(notification.nw_inst)
     if notification.HasField("lldp_neighbor"):
-        logging.info("LLDP")
         handle_LldpNeighborNotification(notification.lldp_neighbor)
     if notification.HasField("route"):
-        logging.info("ROUTE")
         #handle_IpRouteNotification(notification.route)
+        logging.info("Implement route notification handling if needed")
 
     return False
 
-# Create a metric to track time spent and requests made.
-REQUEST_TIME = Summary('request_processing_seconds', 'Time spent processing request')
-
-# Decorate function with metric.
-@REQUEST_TIME.time()
-def process_request(t):
-    """A dummy function that takes some time."""
-    time.sleep(t)
-
 def Run():    
 
-    # Path to your network namespace
     ns_path = '/var/run/netns/srbase-mgmt'
-
-    # Open the file corresponding to the network namespace
     ns_fd = os.open(ns_path, os.O_RDONLY)
 
-    # Load the setns function
     libc = ctypes.CDLL('libc.so.6')
     setns = libc.setns
     setns.argtypes = [ctypes.c_int, ctypes.c_int]
 
-    # CLONE_NEWNET constant for network namespace
     CLONE_NEWNET = 0x40000000
 
-    # Set the network namespace
     if setns(ns_fd, CLONE_NEWNET) == -1:
         raise Exception("Failed to set network namespace")
 
-    # Start the HTTP server
     start_http_server(8000)
-    process_request(random.random())
 
     sub_stub = SdkNotificationServiceStub(channel)
-
     response = stub.AgentRegister(request=AgentRegistrationRequest(), metadata=metadata)
-
-
     logging.info(f"Registration response : {response.status}")
-
-        
             
     app_id = get_app_id(agent_name)
     if not app_id:
@@ -252,7 +196,6 @@ def Run():
     create_subscription_response = stub.NotificationRegister(request=request, metadata=metadata)
     stream_id = create_subscription_response.stream_id
 
-
     logging.info(f"Create subscription response received. stream_id : {stream_id}")
 
     Subscribe_Notifications(stream_id)
@@ -260,27 +203,18 @@ def Run():
     stream_request = NotificationStreamRequest(stream_id=stream_id)
     stream_response = sub_stub.NotificationStream(stream_request, metadata=metadata)
     count = 0
-    route_count = 0
     while True:
         try:
             for r in stream_response:
                 count += 1
                 logging.info(f"Count :: {count}  NOTIFICATION:: \n{r.notification}")
                 for obj in r.notification:
-                    logging.info("ITERATING THROUGH NOTIFICATION")
-                    #if obj.HasField('config') and obj.config.key.js_path == ".commit.end":
-                        #logging.info('TO DO -commit.end config')
-                        #Create new handler to subscribe to telemetry notifications if config adds any topology element
-                        #Possibly use pygnmi to subscribe telemetry paths
-                    #else:
                     Handle_Notification(obj)
         except grpc._channel._Rendezvous as err:
             logging.info('GOING TO EXIT NOW: {}'.format(str(err)))
-            #print("Rendezvous Exception")
         except Exception as e:
             logging.error('Exception caught :: {}'.format(str(e)))
             print("Generic Run Exception: "+e)
-
             try:
                 response = stub.AgentUnRegister(request=AgentRegistrationRequest(), metadata=metadata)
                 logging.error('Run try: Unregister response:: {}'.format(response))
@@ -288,10 +222,6 @@ def Run():
                 logging.info('GOING TO EXIT NOW: {}'.format(str(err)))
                 print("Unregister Run Exception")
                 sys.exit()
-
-        #    return True
-        #sys.exit()
-        #return True
 
 def Exit_Gracefully(signum, frame):
     logging.info("Caught signal :: {}\n will unregister fib_agent".format(signum))
@@ -305,7 +235,7 @@ def Exit_Gracefully(signum, frame):
 
 if __name__ == '__main__':
     hostname = socket.gethostname()
-    stdout_dir = '/var/log/srlinux/stdout' # PyTEnv.SR  L_STDOUT_DIR
+    stdout_dir = '/var/log/srlinux/stdout'
     signal.signal(signal.SIGTERM, Exit_Gracefully)
     if not os.path.exists(stdout_dir):
         os.makedirs(stdout_dir, exist_ok=True)

@@ -31,6 +31,83 @@
           "color": {
             "mode": "thresholds"
           },
+          "mappings": [
+            {
+              "options": {
+                "1": {
+                  "index": 0,
+                  "text": "‎ "
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "builder",
+          "expr": "lldp_neighbors{system_name=\"$TOPO_LEAFS\"}",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Current wirings per leaf",
+      "transformations": [],
+      "transparent": true,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
           "custom": {
             "align": "auto",
             "cellOptions": {
@@ -60,7 +137,7 @@
         "h": 8,
         "w": 7,
         "x": 0,
-        "y": 0
+        "y": 8
       },
       "id": 2,
       "options": {
@@ -131,7 +208,7 @@
         "h": 8,
         "w": 7,
         "x": 7,
-        "y": 0
+        "y": 8
       },
       "id": 1,
       "options": {
@@ -178,8 +255,8 @@
       {
         "current": {
           "selected": false,
-          "text": "admin_state_mgmt0",
-          "value": "admin_state_mgmt0"
+          "text": "admin_state_ethernet_1_1_srl1",
+          "value": "admin_state_ethernet_1_1_srl1"
         },
         "datasource": {
           "type": "prometheus",
@@ -206,8 +283,8 @@
       {
         "current": {
           "selected": false,
-          "text": "nwinst_state_mgmt",
-          "value": "nwinst_state_mgmt"
+          "text": "nwinst_state_mgmt_srl1",
+          "value": "nwinst_state_mgmt_srl1"
         },
         "datasource": {
           "type": "prometheus",
@@ -227,6 +304,33 @@
         },
         "refresh": 2,
         "regex": "^nwinst_state.*",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "srl1",
+          "value": "srl1"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA97CFB590B2093"
+        },
+        "definition": "label_values(system_name)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Topology leafs",
+        "multi": false,
+        "name": "TOPO_LEAFS",
+        "options": [],
+        "query": {
+          "query": "label_values(system_name)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
         "skipUrlSync": false,
         "sort": 0,
         "type": "query"

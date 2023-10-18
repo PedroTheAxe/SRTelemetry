@@ -15,6 +15,7 @@ topology:
         - 8000:8000
     srl2:
       kind: srl
+      mgmt-ipv4: 172.20.20.3
       image: ghcr.io/nokia/srlinux
       binds:
           - /home/vboxuser/Desktop/Nokia/SRTelemetry/srtelemetry.sh:/usr/local/bin/srtelemetry.sh:rw
