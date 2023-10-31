@@ -78,10 +78,8 @@ def Subscribe_Notifications(stream_id):
 
 def get_app_id(app_name):
 
-    logging.info(f'Metadata {metadata} ')
     appId_req = AppIdRequest(name=app_name)
     app_id_response=stub.GetAppId(request=appId_req, metadata=metadata)
-    logging.info(f'app_id_response {app_id_response.status} {app_id_response.id} ')
     
     return app_id_response.id
 
@@ -152,7 +150,6 @@ def handle_NetworkInstanceNotification(notification: Notification) -> None:
 
 def Handle_Notification(notification: Notification)-> None:
     if notification.HasField("config"):
-        #handle_ConfigNotification(notification.config)
         logging.info("Implement config notification handling if needed")
     if notification.HasField("intf"):
         handle_InterfaceNotification(notification.intf)
@@ -161,7 +158,6 @@ def Handle_Notification(notification: Notification)-> None:
     if notification.HasField("lldp_neighbor"):
         handle_LldpNeighborNotification(notification.lldp_neighbor)
     if notification.HasField("route"):
-        #handle_IpRouteNotification(notification.route)
         logging.info("Implement route notification handling if needed")
 
     return False
@@ -196,8 +192,6 @@ def Run():
     create_subscription_response = stub.NotificationRegister(request=request, metadata=metadata)
     stream_id = create_subscription_response.stream_id
 
-    logging.info(f"Create subscription response received. stream_id : {stream_id}")
-
     Subscribe_Notifications(stream_id)
 
     stream_request = NotificationStreamRequest(stream_id=stream_id)
@@ -214,13 +208,11 @@ def Run():
             logging.info('GOING TO EXIT NOW: {}'.format(str(err)))
         except Exception as e:
             logging.error('Exception caught :: {}'.format(str(e)))
-            print("Generic Run Exception: "+e)
             try:
                 response = stub.AgentUnRegister(request=AgentRegistrationRequest(), metadata=metadata)
                 logging.error('Run try: Unregister response:: {}'.format(response))
             except grpc._channel._Rendezvous as err:
                 logging.info('GOING TO EXIT NOW: {}'.format(str(err)))
-                print("Unregister Run Exception")
                 sys.exit()
 
 def Exit_Gracefully(signum, frame):
